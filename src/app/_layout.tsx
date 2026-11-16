@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { FeedbackProvider } from '@/components/feedback';
+import { useReducedMotion } from '@/components/reduced-motion';
 import { ThemeProvider, useTheme } from '@/components/theme-context';
 import { AppProvider, useApp } from '@/state/app';
 import { ReminderSync } from '@/state/reminders';
@@ -35,10 +36,11 @@ function Themed() {
 
 function Nav() {
   const { c, dark } = useTheme();
+  const reduced = useReducedMotion();
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg }, animation: reduced ? 'none' : 'default' }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
         <Stack.Screen name="workout/preview" options={{ presentation: 'modal' }} />

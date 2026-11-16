@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { radius, shadows, spacing, TOUCH, type, type Palette, type TypeVariant } from '@/theme';
+import { useReducedMotion } from './reduced-motion';
 import { useTheme } from './theme-context';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -298,8 +299,9 @@ export function ProgressBar({ value, max, label }: { value: number; max: number;
 export function Sheet({ visible, onClose, title, children, testID }: { visible: boolean; onClose: () => void; title: string; children: React.ReactNode; testID?: string }) {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={visible} transparent animationType={reduced ? 'none' : 'slide'} onRequestClose={onClose} statusBarTranslucent>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'flex-end' }}>
         <Pressable accessibilityLabel={t('common.close')} accessibilityRole="button" onPress={onClose} style={[StyleSheet.absoluteFill, { backgroundColor: c.overlay }]} />
         <View testID={testID} accessibilityViewIsModal style={{ backgroundColor: c.bg, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, maxHeight: '90%', paddingBottom: Math.max(insets.bottom, spacing.lg) }}>

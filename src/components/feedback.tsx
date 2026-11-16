@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { radius, shadows, spacing, type } from '@/theme';
+import { useReducedMotion } from './reduced-motion';
 import { useTheme } from './theme-context';
 import { Btn, Txt } from './ui';
 import { nowMs } from '@/domain/clock';
@@ -19,6 +20,7 @@ export const useFeedback = () => useContext(Ctx);
 export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   const { c } = useTheme();
   const insets = useSafeAreaInsets();
+  const reduced = useReducedMotion();
   const [dialog, setDialog] = useState<(ConfirmOpts & { resolve: (v: boolean) => void }) | null>(null);
   const [toast, setToast] = useState<(ToastOpts & { id: number }) | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -53,7 +55,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
           </View>
         </View>
       ) : null}
-      <Modal visible={!!dialog} transparent animationType="fade" onRequestClose={() => close(false)}>
+      <Modal visible={!!dialog} transparent animationType={reduced ? 'none' : 'fade'} onRequestClose={() => close(false)}>
         <View style={[styles.backdrop, { backgroundColor: c.overlay }]}>
           <View testID="dialog" accessibilityViewIsModal accessibilityRole="alert" style={[styles.dialog, { backgroundColor: c.surface }]}>
             <Txt variant="headline" accessibilityRole="header">{dialog?.title}</Txt>
