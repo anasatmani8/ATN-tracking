@@ -54,6 +54,8 @@ export interface PersonalRecord {
   setId: string;
   sessionId: string;
   achievedAt: number;
+  /** >1 when the load was entered per implement (e.g. a pair of dumbbells); value is the total. */
+  implementCount: number;
 }
 
 /** Deterministic history order: completion time, then session start, then id. */
@@ -125,6 +127,7 @@ export function analyzeRecords(history: HistorySet[]): RecordAnalysis {
         setId: s.id,
         sessionId: s.sessionId,
         achievedAt: s.completedAt ?? s.sessionStartedAt,
+        implementCount: s.loadConvention === 'per_implement' ? Math.max(1, s.implementCount) : 1,
       };
       best.set(k, rec);
       // reps-at-load only counts as an event once that load has been lifted before.

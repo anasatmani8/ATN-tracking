@@ -429,6 +429,11 @@ export class Training {
 
   /** Draft edits are written straight to disk so nothing is lost on force-close. */
   async updateSet(setId: string, fields: Partial<Pick<SetRow, 'reps' | 'load_kg' | 'load_mode' | 'duration_sec' | 'distance_m' | 'rir' | 'kind'>>): Promise<void> {
+    // Read and write in one transaction so a completion queued behind this edit sees it.
+    return this.store.tx(() => this.updateSetTx(setId, fields));
+  }
+
+  private async updateSetTx(setId: string, fields: Partial<Pick<SetRow, 'reps' | 'load_kg' | 'load_mode' | 'duration_sec' | 'distance_m' | 'rir' | 'kind'>>): Promise<void> {
     const s = await this.db.first<SetRow>('SELECT * FROM session_sets WHERE id = ? AND deleted_at IS NULL', [setId]);
     if (!s) return;
     for (const k of ['reps', 'load_kg', 'duration_sec', 'distance_m', 'rir'] as const) {

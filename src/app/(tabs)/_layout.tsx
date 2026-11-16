@@ -58,7 +58,7 @@ export default function TabsLayout() {
       tabBar={({ state, navigateToTab }) => (
         <View style={{ backgroundColor: c.surface, borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }}>
           <ResumeBar />
-          <View accessibilityRole="tablist" style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 6) }]}>
+          <View role="tablist" style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 6) }]}>
             {state.routes.map((route, i) => {
               const tab = TABS.find((x) => x.name === route.name);
               if (!tab) return null;
@@ -67,8 +67,8 @@ export default function TabsLayout() {
                 <Pressable
                   key={route.key}
                   testID={`tab-${tab.name}`}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: on }}
+                  role="tab"
+                  aria-selected={on}
                   accessibilityLabel={t(tab.label)}
                   onPress={() => {
                     if (!on) navigateToTab(route.key);

@@ -44,7 +44,7 @@ export default function Review() {
               <>
                 <Divider />
                 <Txt variant="bodyStrong">{t('summary.prs', { count: data.prs.length })}</Txt>
-                {data.prs.map((p) => <Txt key={`${p.setId}${p.type}`} variant="label">{p.name}: {p.type === 'heaviest_load' ? fmt.weight(p.value) : p.type === 'most_reps_at_load' ? t('pr.repsAt', { reps: p.value, load: fmt.weight(p.atLoadKg!) }) : String(p.value)}</Txt>)}
+                {data.prs.map((p) => <Txt key={`${p.setId}${p.type}`} variant="label">{p.name}: {p.type === 'heaviest_load' ? fmt.recordLoad(p.value, p.implementCount) : p.type === 'most_reps_at_load' ? t('pr.repsAt', { reps: p.value, load: fmt.recordLoad(p.atLoadKg!, p.implementCount) }) : String(p.value)}</Txt>)}
               </>
             ) : null}
           </Card>

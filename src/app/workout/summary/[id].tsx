@@ -77,7 +77,7 @@ export default function Summary() {
               <Row><Icon name="trophy-outline" tone="violet" /><Txt variant="headline">{t('summary.prs', { count: prs.length })}</Txt></Row>
               {prs.map((p) => (
                 <Txt key={`${p.setId}-${p.type}`}>
-                  {p.name}: {p.type === 'heaviest_load' ? t('pr.heaviest', { load: fmt.weight(p.value) }) : p.type === 'most_reps_at_load' ? t('pr.repsAt', { reps: p.value, load: fmt.weight(p.atLoadKg!) }) : p.type === 'most_reps' ? t('pr.reps', { reps: p.value }) : p.type === 'longest_duration' ? t('pr.duration', { time: formatDuration(p.value) }) : t('pr.distance', { distance: fmt.distance(p.value) })}
+                  {p.name}: {p.type === 'heaviest_load' ? t('pr.heaviest', { load: fmt.recordLoad(p.value, p.implementCount) }) : p.type === 'most_reps_at_load' ? t('pr.repsAt', { reps: p.value, load: fmt.recordLoad(p.atLoadKg!, p.implementCount) }) : p.type === 'most_reps' ? t('pr.reps', { reps: p.value }) : p.type === 'longest_duration' ? t('pr.duration', { time: formatDuration(p.value) }) : t('pr.distance', { distance: fmt.distance(p.value) })}
                 </Txt>
               ))}
             </Card>

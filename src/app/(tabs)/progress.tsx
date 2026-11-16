@@ -46,7 +46,7 @@ export default function ProgressTab() {
               {data.records.slice(0, 12).map((r, i) => (
                 <View key={`${r.exerciseId}-${r.type}`}>
                   {i > 0 ? <Divider /> : null}
-                  <ListItem title={r.name} value={r.type === 'heaviest_load' ? fmt.weight(r.value) : r.type === 'most_reps' ? t('workout.reps', { count: r.value }) : formatDuration(r.value)} onPress={() => router.push(`/exercise/${r.exerciseId}`)} />
+                  <ListItem title={r.name} value={r.type === 'heaviest_load' ? fmt.recordLoad(r.value, r.implementCount) : r.type === 'most_reps' ? t('workout.reps', { count: r.value }) : formatDuration(r.value)} onPress={() => router.push(`/exercise/${r.exerciseId}`)} />
                 </View>
               ))}
             </Card>

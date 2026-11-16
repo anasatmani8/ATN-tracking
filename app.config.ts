@@ -41,7 +41,8 @@ const config: ExpoConfig = {
   },
   web: { output: 'single', favicon: './assets/images/favicon.png' },
   plugins: [
-    ['expo-router', { headers: { 'Cross-Origin-Embedder-Policy': 'credentialless', 'Cross-Origin-Opener-Policy': 'same-origin' } }],
+    // One bundle on every platform: the app must work fully offline, including on web.
+    ['expo-router', { asyncRoutes: false, sitemap: false, headers: { 'Cross-Origin-Embedder-Policy': 'credentialless', 'Cross-Origin-Opener-Policy': 'same-origin' } }],
     ['expo-splash-screen', { backgroundColor: '#1D4ED8', image: './assets/images/splash-icon.png', imageWidth: 96 }],
     'expo-sqlite',
     'expo-secure-store',

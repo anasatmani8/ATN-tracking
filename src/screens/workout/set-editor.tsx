@@ -42,7 +42,7 @@ export function SetEditor({ sx, set, index, fmt, onComplete, onUncomplete, onRem
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [set.load_kg, set.reps, set.duration_sec, set.distance_m, set.rir, fmt.wUnit, fmt.distUnit]);
 
-  const flush = useCallback(async () => {
+  const writeDirty = useCallback(async () => {
     if (timer.current) clearTimeout(timer.current);
     const d = dirty.current;
     dirty.current = {};
@@ -62,6 +62,15 @@ export function SetEditor({ sx, set, index, fmt, onComplete, onUncomplete, onRem
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.training, set.id, fmt]);
+
+  // Saves for a row run one after another, and completing waits for any save already in flight
+  // (tapping the check button blurs the field, which starts a save of its own).
+  const inflight = useRef<Promise<void>>(Promise.resolve());
+  const flush = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    inflight.current = inflight.current.then(writeDirty, writeDirty);
+    return inflight.current;
+  }, [writeDirty]);
 
   const change = (k: keyof ReturnType<typeof init>, text: string) => {
     setV((s) => ({ ...s, [k]: text }));
@@ -110,8 +119,8 @@ export function SetEditor({ sx, set, index, fmt, onComplete, onUncomplete, onRem
         </Row>
         <Pressable
           testID={`set-${index}-complete`}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: done }}
+          role="checkbox"
+          aria-checked={done}
           accessibilityLabel={done ? t('set.completedA11y', { n: index + 1 }) : t('set.completeA11y', { n: index + 1 })}
           onPress={() => (done ? onUncomplete(set) : onComplete(set, flush))}
           style={({ pressed }) => ({ width: 56, height: 56, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: done ? c.success : c.primarySoft, borderWidth: done ? 0 : 2, borderColor: c.primary, opacity: pressed ? 0.7 : 1 })}>

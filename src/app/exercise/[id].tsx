@@ -38,7 +38,7 @@ export default function ExerciseDetail() {
   }
   const sessions = [...bySession.values()].filter((x) => x.date >= from).sort((a, b) => (a.date < b.date ? -1 : 1));
   const recLabel = (r: (typeof recs)[number]) =>
-    r.type === 'heaviest_load' ? fmt.weight(r.value) : r.type === 'most_reps_at_load' ? t('pr.repsAt', { reps: r.value, load: fmt.weight(r.atLoadKg!) }) : r.type === 'most_reps' ? t('workout.reps', { count: r.value }) : r.type === 'longest_duration' ? formatDuration(r.value) : fmt.distance(r.value);
+    r.type === 'heaviest_load' ? fmt.recordLoad(r.value, r.implementCount) : r.type === 'most_reps_at_load' ? t('pr.repsAt', { reps: r.value, load: fmt.recordLoad(r.atLoadKg!, r.implementCount) }) : r.type === 'most_reps' ? t('workout.reps', { count: r.value }) : r.type === 'longest_duration' ? formatDuration(r.value) : fmt.distance(r.value);
 
   return (
     <Screen testID="exercise-detail" title={ex.name} subtitle={`${equipmentLabel(ex.equipment)} · ${t(`input.${ex.inputType}` as StringKey)}`} back>

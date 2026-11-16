@@ -23,6 +23,9 @@ export function useFmt() {
     return {
       wUnit: prefs.weightUnit,
       weight: (kg: number) => formatWeight(kg, prefs.weightUnit, loc),
+      /** A record load shown the way it is entered: per dumbbell ×2, or total. */
+      recordLoad: (totalKg: number, implementCount = 1) =>
+        implementCount > 1 ? `${formatWeight(totalKg / implementCount, prefs.weightUnit, loc)} ×${implementCount}` : formatWeight(totalKg, prefs.weightUnit, loc),
       weightNum: (kg: number | null) => (kg == null ? '' : String(round(fromKg(kg, prefs.weightUnit), 2))),
       parseWeight: (text: string) => { const v = parseDecimal(text); return v == null ? null : toKg(v, prefs.weightUnit); },
       volume: (ml: number) => formatVolume(ml, prefs.volumeUnit, loc),

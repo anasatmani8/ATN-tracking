@@ -209,7 +209,11 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
     if (!env) return null;
     return {
       ...env, prefs, tz, today,
-      setPrefs: (patch) => savePrefs(env.store, patch),
+      // Resolve only after in-memory prefs reflect the write, so navigation right after sees the new values.
+      setPrefs: async (patch) => {
+        await savePrefs(env.store, patch);
+        setPrefsState(await loadPrefs(env.store));
+      },
       isDemo: env.partition === 'demo',
       enterDemo: () => switchTo('demo', async () => {
         await deleteExpoDb(dbName('demo'));

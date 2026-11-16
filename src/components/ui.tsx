@@ -48,7 +48,8 @@ export function Btn({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: !!disabled || !!loading, busy: !!loading }}
+      aria-disabled={!!disabled || !!loading}
+      aria-busy={!!loading}
       disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => [
@@ -177,11 +178,11 @@ export function Field({
 export function Segmented<T extends string | number>({ options, value, onChange, label, testID }: { options: { value: T; label: string }[]; value: T | null; onChange: (v: T) => void; label: string; testID?: string }) {
   const { c } = useTheme();
   return (
-    <View testID={testID} accessibilityRole="radiogroup" accessibilityLabel={label} style={[styles.segmented, { backgroundColor: c.surfaceAlt }]}>
+    <View testID={testID} role="radiogroup" accessibilityLabel={label} style={[styles.segmented, { backgroundColor: c.surfaceAlt }]}>
       {options.map((o) => {
         const on = o.value === value;
         return (
-          <Pressable key={String(o.value)} testID={testID ? `${testID}-${o.value}` : undefined} accessibilityRole="radio" accessibilityState={{ selected: on, checked: on }} accessibilityLabel={o.label} onPress={() => onChange(o.value)}
+          <Pressable key={String(o.value)} testID={testID ? `${testID}-${o.value}` : undefined} role="radio" aria-checked={on} accessibilityLabel={o.label} onPress={() => onChange(o.value)}
             style={[styles.segment, on && { backgroundColor: c.surface, boxShadow: shadows.card }]}>
             <Text style={[type.label, { color: on ? c.text : c.textMuted, textAlign: 'center' }]}>{o.label}</Text>
           </Pressable>
@@ -194,7 +195,8 @@ export function Segmented<T extends string | number>({ options, value, onChange,
 export function Chip({ label, selected, onPress, icon, testID }: { label: string; selected?: boolean; onPress?: () => void; icon?: IconName; testID?: string }) {
   const { c } = useTheme();
   return (
-    <Pressable testID={testID} accessibilityRole={onPress ? 'button' : 'text'} accessibilityState={onPress ? { selected: !!selected } : undefined} accessibilityLabel={label} onPress={onPress} disabled={!onPress}
+    <Pressable testID={testID} role={!onPress ? undefined : selected === undefined ? 'button' : 'checkbox'} aria-checked={onPress && selected !== undefined ? selected : undefined}
+      accessibilityLabel={label} onPress={onPress} disabled={!onPress}
       style={({ pressed }) => [styles.chip, { backgroundColor: selected ? c.primary : c.surface, borderColor: selected ? c.primary : c.border, opacity: pressed ? 0.7 : 1 }]}>
       {icon ? <Ionicons name={icon} size={16} color={selected ? c.onPrimary : c.textMuted} /> : null}
       <Text style={[type.label, { color: selected ? c.onPrimary : c.text }]}>{label}</Text>
