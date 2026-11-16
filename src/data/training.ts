@@ -383,6 +383,22 @@ export class Training {
     });
   }
 
+  /** Swap candidates: the plan slot's listed alternatives first, then other movements with the same pattern. */
+  async alternativesFor(sxId: string): Promise<string[]> {
+    const sx = await this.db.first<SessionExerciseRow & { program_id: string | null }>(
+      'SELECT x.*, s.program_id FROM session_exercises x JOIN sessions s ON s.id = x.session_id WHERE x.id = ?', [sxId]);
+    if (!sx) return [];
+    const out: string[] = [];
+    if (sx.plan_slot_id && sx.program_id) {
+      const p = await this.getProgram(sx.program_id);
+      const slot = p?.doc.days.flatMap((d) => d.exercises).find((x) => x.slotId === sx.plan_slot_id);
+      if (slot) out.push(...[slot.exerciseId, ...slot.alternatives].filter((id) => id !== sx.exercise_id));
+    }
+    const pattern = (await this.getExercise(sx.exercise_id))?.pattern;
+    if (pattern) for (const e of BUILTIN_EXERCISES) if (e.pattern === pattern && e.id !== sx.exercise_id && !out.includes(e.id)) out.push(e.id);
+    return out.slice(0, 6);
+  }
+
   async setExerciseFields(sxId: string, fields: { status?: 'pending' | 'done' | 'skipped'; notes?: string; discomfort?: number; rest_sec?: number }): Promise<void> {
     const sx = await this.db.first<{ session_id: string }>('SELECT session_id FROM session_exercises WHERE id = ?', [sxId]);
     if (!sx) return;

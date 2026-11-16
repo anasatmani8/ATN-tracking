@@ -80,9 +80,12 @@ export function sleepMinutesByWakeDate(entries: SleepEntry[], includeNaps: boole
   return out;
 }
 
-export function sumByDay<T extends { localDate: LocalDate }>(rows: T[], value: (r: T) => number): Map<LocalDate, number> {
+export function sumByDay<T>(rows: T[], value: (r: T) => number, dateOf: (r: T) => LocalDate): Map<LocalDate, number> {
   const out = new Map<LocalDate, number>();
-  for (const r of rows) out.set(r.localDate, (out.get(r.localDate) ?? 0) + value(r));
+  for (const r of rows) {
+    const d = dateOf(r);
+    out.set(d, (out.get(d) ?? 0) + value(r));
+  }
   return out;
 }
 
