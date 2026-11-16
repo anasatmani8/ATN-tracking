@@ -474,11 +474,16 @@ export class Training {
     });
   }
 
-  /** Undo for a recent completion: the row returns to draft and its rest timer is cleared. */
+  /**
+   * Undo for a recent completion: the row returns to draft and its rest timer is cleared.
+   * Only while the workout is in progress; a finished workout is changed through history editing.
+   */
   async uncompleteSet(setId: string): Promise<void> {
     await this.store.tx(async () => {
       const s = await this.db.first<SetRow>('SELECT * FROM session_sets WHERE id = ? AND deleted_at IS NULL', [setId]);
       if (!s || s.completed_at == null) return;
+      const session = await this.db.first<{ status: string }>('SELECT status FROM sessions WHERE id = ?', [s.session_id]);
+      if (session?.status !== 'active') return;
       const o = await this.syncFlag(s.session_id);
       await this.store.patch('session_sets', setId, { completed_at: null }, o);
       if (!o.sync) await this.db.run('UPDATE sessions SET rest_started_at = NULL, rest_sec = NULL, rest_exercise_id = NULL WHERE id = ? AND rest_started_at = ?', [s.session_id, s.completed_at]);

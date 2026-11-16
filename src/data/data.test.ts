@@ -56,6 +56,7 @@ describe('training loop', () => {
 
     expect(await env.training.finishSession(sid, T0 + 30 * MIN)).toBe('finished');
     expect(await env.training.finishSession(sid, T0 + 31 * MIN)).toBe('already');
+    await env.training.uncompleteSet(set.id); // a stale undo after finishing must not touch history
     const totals = await env.training.sessionTotals(sid);
     expect(totals).toMatchObject({ workingSets: 1, totalReps: 8, volumeKg: 100 });
     const hist = await env.training.listHistory(10);

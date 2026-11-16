@@ -1,0 +1,41 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Unit and integration tests
+        run: npm test
+      - name: Server migration, RLS and sync tests
+        env:
+          PG_TEST_URL: postgres://postgres@localhost:5432/postgres
+        run: |
+          psql "$PG_TEST_URL" -v ON_ERROR_STOP=1 -q -f supabase/tests/local_auth_stub.sql -f supabase/migrations/0001_sync.sql
+          npx jest --runInBand --testPathPatterns '\.pg\.test\.ts$'
+      - name: Web build
+        run: npm run export:web
+      - name: End-to-end smoke tests (web)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e

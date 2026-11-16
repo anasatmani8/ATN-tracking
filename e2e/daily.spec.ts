@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { expect, test } from '@playwright/test';
 import { freshStart, id } from './helpers';
 
@@ -94,7 +95,7 @@ test('export includes hidden tracker data', async ({ page }) => {
   const download = page.waitForEvent('download');
   await id(page, 'export-json').click();
   const file = await (await download).path();
-  const json = JSON.parse(require('fs').readFileSync(file, 'utf8'));
+  const json = JSON.parse(readFileSync(file, 'utf8'));
   expect(json.format).toBe('kinset-export');
   expect(json.tables.water_logs).toHaveLength(1);
   expect(json.tables.water_logs[0].amount_ml).toBe(500);

@@ -62,13 +62,18 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:server": "bash scripts/pg-test.sh",
     "export:web": "expo export --platform web",
     "e2e": "playwright test --trace off",
-    "check": "npm run typecheck && npm run lint && npm test && npm run test:server"
+    "check": "npm run typecheck && npm run lint && npm test && npm run test:server",
+    "serve:web": "node scripts/serve-web.js 8081",
+    "icons": "node scripts/render-icons.js"
   },
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
 }

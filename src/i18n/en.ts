@@ -115,7 +115,7 @@ export const en = {
   'prog.reason.disabled': 'Suggestions are off.', 'prog.reason.not_enough_history': 'Needs two comparable sessions.',
   'prog.reason.changed_movement': 'The exercise changed between sessions, so they are not compared.', 'prog.reason.discomfort': 'You reported discomfort, so no increase is suggested.',
   'prog.reason.rep_range_changed': 'The rep range changed between sessions.', 'prog.reason.no_rep_target': 'This exercise has no rep target to compare against.',
-  'prog.reason.no_load': 'Suggestions need an external load on every working set.', 'prog.reason.load_varied': 'The load varied between sets, so the sessions are not comparable.',
+  'prog.reason.no_load': 'Suggestions need an external load on every working set.', 'prog.reason.load_varied': 'The load was not the same on every set in both sessions, so they are not compared yet.',
   'prog.reason.missing_effort': 'Add reps in reserve (RIR) to your sets to get suggestions.', 'prog.reason.below_target': 'Some sets were below the top of the rep range.',
   'prog.reason.effort_high': 'Some sets had fewer reps in reserve than the rule allows.', 'prog.reason.ready': 'Your last two sessions hit the top of the rep range on every set with reps in reserve to spare.',
   'prog.accept': 'Use it', 'prog.adjust': 'Adjust', 'prog.dismiss': 'Not now', 'prog.adjustLabel': 'Load to use', 'prog.accepted': 'Applied to the remaining sets',

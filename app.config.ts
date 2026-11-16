@@ -16,10 +16,12 @@ const config: ExpoConfig = {
   slug: env.APP_SLUG ?? 'kinset',
   scheme: env.APP_SCHEME ?? 'kinset',
   version: '1.0.0',
+  runtimeVersion: { policy: 'appVersion' },
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   userInterfaceStyle: 'automatic',
   ios: {
+    icon: './assets/images/icon.png',
     bundleIdentifier: iosBundleId,
     supportsTablet: false,
     infoPlist: {
@@ -34,8 +36,8 @@ const config: ExpoConfig = {
       foregroundImage: './assets/images/android-icon-foreground.png',
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
-    permissions: ['android.permission.CAMERA', 'android.permission.POST_NOTIFICATIONS', 'android.permission.SCHEDULE_EXACT_ALARM'],
-    blockedPermissions: ['android.permission.RECORD_AUDIO', 'com.google.android.gms.permission.AD_ID'],
+    permissions: ['android.permission.CAMERA', 'android.permission.POST_NOTIFICATIONS'],
+    blockedPermissions: ['android.permission.RECORD_AUDIO', 'com.google.android.gms.permission.AD_ID', 'android.permission.SCHEDULE_EXACT_ALARM', 'android.permission.USE_EXACT_ALARM'],
     // Health data stays out of OS cloud backups; account sync is the opt-in backup path.
     allowBackup: false,
   },
@@ -48,7 +50,7 @@ const config: ExpoConfig = {
     'expo-secure-store',
     'expo-localization',
     ['expo-notifications', { color: '#1D4ED8' }],
-    ['expo-camera', { cameraPermission: `${name} uses the camera only to scan a food barcode when you choose to.`, recordAudioAndroid: false }],
+    ['expo-camera', { cameraPermission: `${name} uses the camera only to scan a food barcode when you choose to.`, microphonePermission: false, recordAudioAndroid: false }],
     ['expo-font', {}],
   ],
   experiments: { typedRoutes: false },
