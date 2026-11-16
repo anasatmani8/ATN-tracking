@@ -55,7 +55,7 @@ Simulator-only/web-only evidence is labelled as such in `docs/release-checklist.
 - Optional workout share image: not built.
 - Exercise demo media: none bundled, so no media controls are shown.
 - Strings are English only (externalized; date/number formatting is locale-aware).
-- In-session exercise reordering uses the list sheet for navigation; reordering is in the plan editor.
+- In-session exercise reordering: move up/down buttons in the workout's exercise list.
 
 ## Next actions
 

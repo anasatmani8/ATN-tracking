@@ -399,6 +399,21 @@ export class Training {
     return out.slice(0, 6);
   }
 
+  /** Move an exercise up or down within an in-progress session. Positions stay contiguous. */
+  async moveExercise(sxId: string, dir: -1 | 1): Promise<void> {
+    await this.store.tx(async () => {
+      const sx = await this.db.first<SessionExerciseRow>('SELECT * FROM session_exercises WHERE id = ? AND deleted_at IS NULL', [sxId]);
+      if (!sx) return;
+      const all = await this.db.all<SessionExerciseRow>('SELECT * FROM session_exercises WHERE session_id = ? AND deleted_at IS NULL ORDER BY position', [sx.session_id]);
+      const i = all.findIndex((x) => x.id === sxId);
+      const j = i + dir;
+      if (j < 0 || j >= all.length) return;
+      [all[i], all[j]] = [all[j], all[i]];
+      const o = await this.syncFlag(sx.session_id);
+      for (const [pos, x] of all.entries()) if (x.position !== pos) await this.store.patch('session_exercises', x.id, { position: pos }, o);
+    });
+  }
+
   async setExerciseFields(sxId: string, fields: { status?: 'pending' | 'done' | 'skipped'; notes?: string; discomfort?: number; rest_sec?: number }): Promise<void> {
     const sx = await this.db.first<{ session_id: string }>('SELECT session_id FROM session_exercises WHERE id = ?', [sxId]);
     if (!sx) return;

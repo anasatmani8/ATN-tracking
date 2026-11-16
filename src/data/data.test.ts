@@ -72,6 +72,22 @@ describe('training loop', () => {
     fs.unlinkSync(file);
   });
 
+  test('reorder exercises within a session', async () => {
+    const env = await makeEnv();
+    const { sid } = await startHome(env);
+    let d = (await env.training.getSession(sid))!;
+    const names = d.exercises.map((e) => e.name);
+    await env.training.moveExercise(d.exercises[0].id, 1);
+    await env.training.moveExercise(d.exercises[0].id, -1); // the same row, now second, moves back to first
+    await env.training.moveExercise(d.exercises[4].id, 1); // last: no-op
+    d = (await env.training.getSession(sid))!;
+    expect(d.exercises.map((e) => e.name)).toEqual(names);
+    await env.training.moveExercise(d.exercises[2].id, -1);
+    d = (await env.training.getSession(sid))!;
+    expect(d.exercises.map((e) => e.name)).toEqual([names[0], names[2], names[1], names[3], names[4]]);
+    expect(d.exercises.map((e) => e.position)).toEqual([0, 1, 2, 3, 4]);
+  });
+
   test('pause freezes elapsed and rest timers', async () => {
     const env = await makeEnv();
     const { sid } = await startHome(env);

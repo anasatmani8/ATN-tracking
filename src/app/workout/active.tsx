@@ -210,7 +210,15 @@ export default function ActiveWorkout() {
       <Sheet visible={listOpen} onClose={() => setListOpen(false)} title={t('active.exercises')} testID="exercise-list-sheet">
         {exercises.map((e, i) => {
           const d = e.sets.filter((x) => x.completed_at).length;
-          return <ListItem key={e.id} testID={`goto-${i}`} title={`${i + 1}. ${e.name}`} subtitle={t('active.setsDone', { done: d, total: e.sets.length })} right={i === idx ? <Icon name="radio-button-on" tone="primary" /> : d > 0 && d === e.sets.length ? <Icon name="checkmark-circle" tone="success" /> : undefined} onPress={() => { go(i); setListOpen(false); }} />;
+          return (
+            <Row key={e.id}>
+              <View style={{ flex: 1 }}>
+                <ListItem testID={`goto-${i}`} title={`${i + 1}. ${e.name}`} subtitle={t('active.setsDone', { done: d, total: e.sets.length })} right={i === idx ? <Icon name="radio-button-on" tone="primary" /> : d > 0 && d === e.sets.length ? <Icon name="checkmark-circle" tone="success" /> : undefined} onPress={() => { go(i); setListOpen(false); }} />
+              </View>
+              <IconBtn testID={`move-up-${i}`} icon="arrow-up" label={t('program.moveUp', { name: e.name })} disabled={i === 0} onPress={() => void app.training.moveExercise(e.id, -1)} />
+              <IconBtn testID={`move-down-${i}`} icon="arrow-down" label={t('program.moveDown', { name: e.name })} disabled={i === exercises.length - 1} onPress={() => void app.training.moveExercise(e.id, 1)} />
+            </Row>
+          );
         })}
         <Btn icon="add" variant="secondary" title={t('active.addExercise')} onPress={() => { setListOpen(false); setPicker('add'); }} testID="list-add-exercise" />
       </Sheet>
