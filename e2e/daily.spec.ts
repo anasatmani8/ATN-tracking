@@ -18,6 +18,8 @@ test('acceptance: two 250 mL entries, undo one → exactly 250 mL', async ({ pag
 });
 
 test('acceptance: sleep 23:30 → 07:00 with 30 min awake is 7 h on the wake day', async ({ page }) => {
+  // Log the night that ended yesterday morning, so a 07:00 wake-up is in the past at any time of day the suite runs.
+  await page.getByTestId('today-screen').getByTestId('date-prev').click();
   await id(page, 'sleep-log').click();
   await id(page, 'sleep-bed').fill('23:30');
   await id(page, 'sleep-wake').fill('07:00');
