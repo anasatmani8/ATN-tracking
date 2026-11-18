@@ -1,5 +1,7 @@
 # Kinset
 
+> **New here? Publishing the app for the first time? Read [`docs/START-HERE.md`](docs/START-HERE.md)** — a step-by-step guide from this repository to the App Store and Google Play.
+
 A fitness log for adults who train on their own: today's plan, fast set logging, meals, water, sleep, body metrics and a weekly review. It works fully offline with no account. Optional account sync backs data up and keeps devices in step.
 
 "Kinset" is a working name. Display name, identifiers, colours, support email and policy URLs are configurable (see [Configuration](#configuration)).
@@ -63,7 +65,7 @@ Architecture and data contracts: [`docs/architecture.md`](docs/architecture.md).
 
 ## Configuration
 
-Copy `.env.example` to `.env.local`. Nothing in it is secret.
+App name, identifiers, support email and policy links live in **`app.settings.json`** (editable on github.com; used by cloud builds). For local experiments, `.env.local` (see `.env.example`) can override the same values. Nothing in either is secret.
 
 | Variable | Purpose |
 | --- | --- |
