@@ -1,20 +1,25 @@
 import type { ExpoConfig } from 'expo/config';
 
+import settings from './app.settings.json';
+
 /**
- * Everything brand- or publisher-specific is read from the environment so the
- * working name "Kinset" can be replaced without touching source. See .env.example.
+ * Everything brand- or publisher-specific lives in app.settings.json (one file, editable on
+ * github.com). Environment variables of the same meaning override it for local experiments.
  */
 const env = process.env;
+const pick = (envValue: string | undefined, fileValue: string) => (envValue && envValue.length > 0 ? envValue : fileValue);
 const variant = env.APP_VARIANT ?? 'development'; // development | preview | production
 const suffix = variant === 'production' ? '' : `.${variant === 'preview' ? 'preview' : 'dev'}`;
-const name = env.APP_NAME ?? 'Kinset';
-const iosBundleId = (env.IOS_BUNDLE_ID ?? 'com.example.kinset') + suffix;
-const androidPackage = (env.ANDROID_PACKAGE ?? 'com.example.kinset') + suffix;
+const name = pick(env.APP_NAME, settings.appName);
+const iosBundleId = pick(env.IOS_BUNDLE_ID, settings.iosBundleId) + suffix;
+const androidPackage = pick(env.ANDROID_PACKAGE, settings.androidPackage) + suffix;
+const easProjectId = pick(env.EAS_PROJECT_ID, settings.easProjectId);
 
 const config: ExpoConfig = {
   name: variant === 'production' ? name : `${name} (${variant === 'preview' ? 'Preview' : 'Dev'})`,
-  slug: env.APP_SLUG ?? 'kinset',
-  scheme: env.APP_SCHEME ?? 'kinset',
+  slug: pick(env.APP_SLUG, settings.slug),
+  scheme: pick(env.APP_SCHEME, settings.scheme),
+  owner: settings.easOwner || undefined,
   version: '1.0.0',
   runtimeVersion: { policy: 'appVersion' },
   orientation: 'portrait',
@@ -56,11 +61,11 @@ const config: ExpoConfig = {
   experiments: { typedRoutes: false },
   extra: {
     variant,
-    supportEmail: env.SUPPORT_EMAIL ?? '',
-    privacyUrl: env.PRIVACY_URL ?? '',
-    termsUrl: env.TERMS_URL ?? '',
-    accountDeletionUrl: env.ACCOUNT_DELETION_URL ?? '',
-    eas: env.EAS_PROJECT_ID ? { projectId: env.EAS_PROJECT_ID } : undefined,
+    supportEmail: pick(env.SUPPORT_EMAIL, settings.supportEmail),
+    privacyUrl: pick(env.PRIVACY_URL, settings.privacyUrl),
+    termsUrl: pick(env.TERMS_URL, settings.termsUrl),
+    accountDeletionUrl: pick(env.ACCOUNT_DELETION_URL, settings.accountDeletionUrl),
+    eas: easProjectId ? { projectId: easProjectId } : undefined,
   },
 };
 
