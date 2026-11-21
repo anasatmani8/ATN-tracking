@@ -101,6 +101,10 @@ export class Coach {
     return this.db.first<{ id: string; provider: string }>('SELECT id, provider FROM coach_threads ORDER BY updated_at DESC LIMIT 1');
   }
 
+  async threadProvider(id: string): Promise<string | null> {
+    return (await this.db.first<{ provider: string }>('SELECT provider FROM coach_threads WHERE id = ?', [id]))?.provider ?? null;
+  }
+
   async createThread(provider: string, now: number): Promise<string> {
     const id = newId();
     await this.store.tx(async () => {

@@ -27,7 +27,10 @@ export function createOpenAIProvider(opts: { client: OpenAI; model: string; maxT
       // Tool results already present after the last assistant message count as answered.
       let i = history.length - 1;
       const answered = new Set<string>();
-      while (i >= 0 && isObj(history[i]) && (history[i] as { role: string }).role === 'tool') answered.add(String((history[i] as { tool_call_id: string }).tool_call_id)), i--;
+      while (i >= 0 && isObj(history[i]) && (history[i] as { role: string }).role === 'tool') {
+        answered.add(String((history[i] as { tool_call_id: string }).tool_call_id));
+        i--;
+      }
       const last = history[i];
       if (!isObj(last) || last.role !== 'assistant' || !Array.isArray(last.tool_calls)) return [];
       return (last.tool_calls as { id: string; function?: { name: string } }[]).filter((c) => !answered.has(c.id)).map((c) => ({ id: c.id, name: c.function?.name ?? '' }));
