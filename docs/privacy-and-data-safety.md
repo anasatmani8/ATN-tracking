@@ -14,12 +14,16 @@ Prepared from the configuration in this repository. **The publisher must review 
 | Auth tokens | iOS Keychain / Android Keystore via SecureStore | To the backend over TLS | Authentication |
 | Barcode digits | Not stored unless the user saves the food | Only if the publisher enables the Open Food Facts provider; no user id is sent | Food lookup |
 | Camera frames | Not stored | No | Barcode scanning on device |
+| AI coach chat: the user's messages and the summaries the coach looks up (training, plan, food totals, water, sleep, body weight) | Device SQLite (chat history is never synced) | Only when the user opens chat, is signed in and has agreed on the consent screen: to the publisher's backend, which forwards it to the configured AI provider (Anthropic or OpenAI) as a processor. The provider receives a one-way hash of the user id, never the email | App functionality (personalized coaching) |
+| Coach usage counts (requests and tokens per day) | Backend | Yes, with the account | Rate limiting and abuse prevention |
 
 Not collected: location, contacts, photos, microphone, advertising ID, device identifiers for tracking, analytics, crash reports. No third-party SDKs for ads or analytics are included. The Android build removes `RECORD_AUDIO`, `AD_ID` and exact-alarm permissions; the iOS build declares only camera usage.
 
 Logs: the app does not write health values, notes, identifiers or tokens to console logs or any analytics. If crash reporting is added later, it must scrub these fields and be re-reviewed (see roadmap).
 
 ## Retention and deletion
+
+- **AI coach**: chat history and the change log stay on the device. Profile → Withdraw chat consent deletes them. The backend keeps no message content, only daily counts, removed with the account. The AI provider's own retention applies to what it receives (check the provider's API data terms and your agreement; choose zero-retention options if available) and must be named in the privacy policy.
 
 - **Guest / local data**: stays on the device until the user erases it (Profile → Privacy and data → Erase) or uninstalls. Android cloud backup is disabled (`allowBackup=false`); iOS device backups may include the app's database as part of the user's own encrypted device backup.
 - **Account data**: kept until the user deletes the account. In-app deletion: Profile → Account and sync → Delete account (re-enter password; requires a sign-in in the last 10 minutes). This erases all synced rows, deletes the auth user and blocks stale devices from uploading. The local copy on the deleting device is removed.
@@ -37,6 +41,8 @@ If **cloud sync is enabled**:
 | User Content | Other User Content (notes) | Yes | No | App Functionality |
 | Identifiers | User ID | Yes | No | App Functionality |
 
+If the **AI coach** is enabled, also declare User Content → Other User Content (coach messages), linked to the user, purpose App Functionality. Apple's guideline 5.1.2(i) requires disclosing and getting permission before sharing personal data with third-party AI; the in-app consent screen does this and names the provider.
+
 If **local-only** (no backend configured): "Data Not Collected".
 
 Tracking: none. No App Tracking Transparency prompt is needed.
@@ -46,7 +52,7 @@ Tracking: none. No App Tracking Transparency prompt is needed.
 With cloud sync enabled:
 
 - Data collected: Health and fitness (Health info, Fitness info), Personal info (Email address), App activity (Other user-generated content: notes), App info (none), Device IDs (none).
-- Data shared with third parties: none (the backend is a processor acting for the publisher).
+- Data shared with third parties: none (the backend is a processor acting for the publisher). If the AI coach is enabled, the AI provider is also a processor acting for the publisher; Google counts transfers to service providers as not "shared", but declare Health and fitness info and App activity (messages) as collected, and review this with the current form.
 - Collection is optional for the user: account creation is optional; all features work without it.
 - Encrypted in transit: yes (TLS).
 - Users can request deletion: yes (in app and via the deletion URL).

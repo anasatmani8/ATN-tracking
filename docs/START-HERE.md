@@ -359,6 +359,8 @@ Build numbers go up automatically. Change `version` in `app.config.ts` (for exam
 
 Only after the first release is live. It requires a Supabase project, account-deletion pages, and new privacy and data-safety answers. Instructions: `supabase/README.md` and `docs/privacy-and-data-safety.md`. Tell me when you want to do it and I will guide you through it.
 
+**AI coach (optional, after cloud sync works).** The suggestion cards and their Apply/Undo work in every build with no setup. Chat needs: (1) cloud sync set up as above; (2) an API key from Anthropic (console.anthropic.com) or OpenAI (platform.openai.com) with billing and a monthly spending limit; (3) the `supabase secrets set …` and `supabase functions deploy coach` commands in `supabase/README.md` step 5; (4) the AI coach paragraph in `docs/privacy.html` filled in and the store privacy answers updated (`docs/privacy-and-data-safety.md`). The key goes only into Supabase secrets — never into `.env.local`, `app.json` or anything starting with `EXPO_PUBLIC_`.
+
 ---
 
 ## If something goes wrong

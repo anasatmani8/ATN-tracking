@@ -1,6 +1,6 @@
 # Build status
 
-Last updated: 2026-11-16. Branch: `claude/friendly-hawking-wgaa6c`.
+Last updated: 2026-11-21. Branch: `claude/friendly-hawking-wgaa6c`.
 
 **Stage reached: running development app (web build, verified by automated tests). Not a release candidate.** No native iOS or Android binary has been built or installed; no store listing exists.
 
@@ -21,6 +21,7 @@ Last updated: 2026-11-16. Branch: `claude/friendly-hawking-wgaa6c`.
 | 2 | Training loop: onboarding, Today, plans, preview, logger, resume, history, summary, records, progression; offline scenario | Done; verified by tests and web e2e |
 | 3 | Daily logs and review: nutrition, meal plan, recipes, barcode boundary, water, sleep, body, check-ins, reminders, weekly review, export | Done; reminders/camera need device verification |
 | 4 | Cloud and hardening: auth, sync, isolation, deletion, migration | Server + engine verified on local Postgres; app wiring implemented; real backend and two physical devices not verified |
+| 4+ | AI coach: insights with one-tap proposals, chat with on-device tools, confirm-to-apply with undo, Anthropic/OpenAI behind an Edge Function with rate limits and a safety screen (`docs/ai-coach.md`) | Built; verified by unit, Postgres and web e2e tests against a mocked backend. **Not yet run against a real provider or Supabase project** |
 | 5 | Release candidate | Not reached (blocked on device builds, credentials and publisher actions) |
 
 ## Verification evidence (this session)
@@ -29,10 +30,10 @@ Last updated: 2026-11-16. Branch: `claude/friendly-hawking-wgaa6c`.
 | --- | --- | --- |
 | Typecheck | `npm run typecheck` | Pass, 0 errors |
 | Lint | `npm run lint` | Pass, 0 problems |
-| Unit + repository tests | `npm test` | 3 suites, 50 tests pass |
-| Server RLS / authorization / sync | `npm run test:server` (Postgres 16, Supabase auth stub + real migration) | 9 tests pass |
+| Unit + repository tests | `npm test` | 82 tests pass (incl. coach contract, providers, handler, engine, tools/apply/undo) |
+| Server RLS / authorization / sync | `npm run test:server` (Postgres 16, Supabase auth stub + real migration) | 12 tests pass (incl. coach rate limits) |
 | Web build | `npm run export:web` | Builds; single bundle, works offline after load |
-| Web e2e acceptance | `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium npm run e2e` | 8 tests pass (375×667, en-GB, Europe/Paris) |
+| Web e2e acceptance | `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium npm run e2e` | 11 tests pass (375×667, en-GB, Europe/Paris), incl. coach insights (guest build) and coach chat (cloud build, mocked auth/sync/coach endpoints) |
 | Native config | `npx expo prebuild --platform android|ios --no-install` | Generates cleanly; manifest has only CAMERA and POST_NOTIFICATIONS, removes RECORD_AUDIO/AD_ID/exact alarm, `allowBackup=false`; Info.plist has camera string only |
 | Android target | `react-native/gradle/libs.versions.toml` | targetSdk 36, compileSdk 37, minSdk 24 |
 
@@ -42,6 +43,10 @@ Simulator-only/web-only evidence is labelled as such in `docs/release-checklist.
 
 ## Defects found and fixed during verification
 
+- Coach: the +10% load guardrail refused the app's own 2.5 kg step at light loads; it now allows one smallest load step when that is larger.
+- Coach: a progression suggestion stayed visible after its change was applied.
+- First sign-in on a device sent the user through onboarding again (new, empty account database); it now starts from the device's guest settings.
+
 - Completing a set straight after typing could be rejected: the blur-triggered save raced the completion. Saves per row are now serialized and `updateSet` reads inside its transaction.
 - Onboarding could bounce back to itself: in-memory prefs lagged the write. `setPrefs` now resolves after state reflects it.
 - Rate limiter in the barcode provider could throttle the very first lookup.
@@ -50,6 +55,8 @@ Simulator-only/web-only evidence is labelled as such in `docs/release-checklist.
 - Toggle chips, radios, tabs and set checkboxes now expose `role`/`aria-*` state (was missing on web).
 
 ## Known gaps
+
+- AI coach: never called a real Anthropic/OpenAI model from this container (no keys, no Supabase project). First live check: deploy `coach`, sign in on a preview build, ask about water and a plan change, confirm a proposal appears and Apply/Undo work. Strings for the coach are English only.
 
 - HealthKit / Health Connect: not built (roadmap; subsequent milestone per brief).
 - Optional workout share image: not built.

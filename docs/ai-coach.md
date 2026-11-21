@@ -97,7 +97,7 @@ Proposal tools: none writes anything. Each one validates its arguments and creat
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/functions/v1/coach` | `{ provider, model, limits }` for the consent screen. Requires sign-in |
-| `POST` | `/functions/v1/coach` | One model turn. Body: `{ threadProvider, history[], input: {type:'user', text, context, notes[]} \| {type:'tool_results', results[]} }`. Returns `{ append[], text, toolCalls[], stop, usage, remaining }` |
+| `POST` | `/functions/v1/coach` | One model turn. Body: `{ threadProvider, history[], input: {type:'user', text, context, notes[]} \| {type:'tool_results', results[]} }`. Returns `{ provider, model, append[], text, toolCalls[], stop, safetyFlags[], usage, remainingToday }` |
 
 Errors use one shape, `{ error: { code, message } }`, with codes `unauthorized` (401), `invalid_request` (400), `provider_mismatch` (409), `rate_limited` (429, with `retryAfterSec`), `not_configured` (503), `provider_error` (502) and `timeout` (504).
 
@@ -141,3 +141,39 @@ Errors use one shape, `{ error: { code, message } }`, with codes `unauthorized` 
 | 3 | Server: rate-limit migration, provider adapters, request handler, Edge Function | unit tests (fake providers), Postgres tests |
 | 4 | App: coach engine loop, chat screen, proposal cards, consent, insights on Today, undo history, settings | engine tests with a fake transport, web e2e with a mocked endpoint |
 | 5 | Docs: setup, privacy/data-safety updates, START-HERE addendum | — |
+
+All five phases are built (2026-11-21). Status of each check is in `docs/build-status.md`.
+
+## As built: configuration
+
+Server secrets (Supabase → Edge Functions → Secrets; never in the app):
+
+| Secret | Default | Meaning |
+| --- | --- | --- |
+| `COACH_PROVIDER` | — (coach off) | `anthropic` or `openai` |
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | — | Key for the chosen provider |
+| `COACH_MODEL` | Anthropic: `claude-opus-5-5`; OpenAI: required (or `OPENAI_MODEL`) | Model id |
+| `COACH_EFFORT` | `medium` | Anthropic effort (`low`…`max`) |
+| `COACH_PER_MINUTE` / `COACH_PER_DAY` | 6 / 100 | Requests per user (server caps: 60 / 1000) |
+| `COACH_TOKENS_PER_DAY` | 2,000,000 | Input + output tokens per user per day |
+| `COACH_TIMEOUT_MS` | 55000 | Per-request provider timeout |
+| `COACH_HASH_SALT` | — (set one) | Salt for the one-way user hash sent to the provider |
+
+Switching `COACH_PROVIDER` is safe: old conversations get `provider_mismatch` and the app starts a new conversation automatically. The Anthropic adapter enables server-side fallback to another model when the configured one is overloaded.
+
+## As built: where things are
+
+| Piece | Path |
+| --- | --- |
+| Contract, guardrails, safety screen, system prompt | `supabase/functions/_shared/coach/contract.ts` (re-exported to the app by `src/coach/contract.ts`) |
+| Provider adapters | `supabase/functions/_shared/coach/providers/{anthropic,openai}.ts` |
+| Request handler (auth, validation, limits, timeout, error mapping) | `supabase/functions/_shared/coach/handler.ts`, wired in `supabase/functions/coach/index.ts` |
+| Rate limits | `supabase/migrations/0002_coach.sql` |
+| On-device tools, proposals, apply/undo | `src/data/coach.ts` |
+| Insights engine | `src/domain/coach-insights.ts` |
+| Tool loop and transport | `src/coach/engine.ts`, `src/coach/transport.ts` |
+| Screens | `src/app/coach.tsx`, `src/screens/coach/*`, Today card in `src/app/(tabs)/index.tsx`, Settings section |
+
+Insights and the change log work for every user, offline and without an account. Chat needs a configured backend, a signed-in account and consent; demo mode never calls the server.
+
+On the first sign-in on a device, the new account database starts from that device's guest settings (units, targets, trackers), stored locally only; settings already saved in the account replace them when sync runs.

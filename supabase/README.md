@@ -10,6 +10,7 @@ The app is fully usable without this. Configure it only to enable accounts, back
   - `sync_push(ops jsonb)` — idempotent by `op_id`, revision-checked, deletes win, `session_complete` applies a finished workout atomically
   - `sync_pull(since bigint, lim int)` — changes after a cursor
   - `delete_my_data()` — requires a sign-in within the last 10 minutes; erases the user's rows and records the erasure so stale devices cannot upload again
+- `functions/coach` (optional AI coach): verifies the user's token, checks limits with `coach_consume()`, screens the message for safety topics and calls Anthropic or OpenAI with the key held in function secrets. It stores no message content; `coach_usage` / `coach_minute` hold only counts. Details: `docs/ai-coach.md`.
 - `functions/delete-account`: Edge Function that calls `delete_my_data()` as the user, then deletes the auth user with the service role key, which exists only in the function environment.
 
 ## Set up a project
@@ -19,7 +20,7 @@ The app is fully usable without this. Configure it only to enable accounts, back
 3. Apply the migration:
    ```bash
    supabase link --project-ref <ref>
-   supabase db push                     # applies supabase/migrations/0001_sync.sql
+   supabase db push                     # applies supabase/migrations/*.sql
    ```
    or paste `migrations/0001_sync.sql` into the SQL editor.
 4. Deploy the deletion function:
@@ -27,12 +28,19 @@ The app is fully usable without this. Configure it only to enable accounts, back
    supabase functions deploy delete-account
    ```
    `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are provided to functions by the platform.
-5. In the app's `.env.local` (or EAS environment variables):
+5. Optional, AI coach: apply `migrations/0002_coach.sql` (included in `supabase db push`), then
+   ```bash
+   supabase secrets set COACH_PROVIDER=anthropic ANTHROPIC_API_KEY=<key> COACH_HASH_SALT=<random string>
+   # or: COACH_PROVIDER=openai OPENAI_API_KEY=<key> COACH_MODEL=<model id>
+   supabase functions deploy coach
+   ```
+   Limits and other options are listed in `docs/ai-coach.md`. Without `COACH_PROVIDER` the function answers `not_configured` and the app shows that chat is unavailable; insights still work.
+6. In the app's `.env.local` (or EAS environment variables):
    ```
    EXPO_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
    EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key>
    ```
-6. Publish a web page for account deletion requests (needed by Google Play) and set `ACCOUNT_DELETION_URL`.
+7. Publish a web page for account deletion requests (needed by Google Play) and set `ACCOUNT_DELETION_URL`.
 
 Never put the service role key in the app or in any `EXPO_PUBLIC_*` variable.
 
