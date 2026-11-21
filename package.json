@@ -65,7 +65,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p supabase/functions",
     "test": "jest",
     "test:server": "bash scripts/pg-test.sh",
     "export:web": "expo export --platform web",

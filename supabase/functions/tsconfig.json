@@ -1,0 +1,16 @@
+{
+  "//": "Type-checks the Deno Edge Function code with Node's tsc (run by npm run typecheck). Deno itself uses deno.json.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "types": ["jest"],
+    "esModuleInterop": true
+  },
+  "include": ["_shared/**/*.ts", "coach/**/*.ts", "deno-shim.d.ts"]
+}
