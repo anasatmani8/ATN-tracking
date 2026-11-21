@@ -31,7 +31,7 @@ jobs:
         env:
           PG_TEST_URL: postgres://postgres@localhost:5432/postgres
         run: |
-          psql "$PG_TEST_URL" -v ON_ERROR_STOP=1 -q -f supabase/tests/local_auth_stub.sql -f supabase/migrations/0001_sync.sql
+          psql "$PG_TEST_URL" -v ON_ERROR_STOP=1 -q -f supabase/tests/local_auth_stub.sql $(for f in supabase/migrations/*.sql; do printf -- "-f %s " "$f"; done)
           npx jest --runInBand --testPathPatterns '\.pg\.test\.ts$'
       - name: Web build
         run: npm run export:web

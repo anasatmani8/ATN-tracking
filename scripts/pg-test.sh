@@ -13,5 +13,5 @@ trap cleanup EXIT
 $RUN "$BIN/initdb" -D "$DIR/data" -U postgres -A trust >/dev/null
 $RUN "$BIN/pg_ctl" -D "$DIR/data" -o "-p $PORT -k $DIR -c listen_addresses=127.0.0.1" -w -l "$DIR/log" start >/dev/null
 export PG_TEST_URL="postgres://postgres@127.0.0.1:$PORT/postgres"
-psql "$PG_TEST_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/tests/local_auth_stub.sql" -f "$ROOT/supabase/migrations/0001_sync.sql"
+psql "$PG_TEST_URL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/tests/local_auth_stub.sql" $(for f in "$ROOT"/supabase/migrations/*.sql; do printf -- "-f %s " "$f"; done)
 cd "$ROOT" && npx jest --runInBand --testPathPatterns '\.pg\.test\.ts$' "$@"
