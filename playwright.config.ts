@@ -17,7 +17,12 @@ export default defineConfig({
     launchOptions: process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {},
   },
   projects: [
-    { name: 'phone-small', use: { viewport: { width: 375, height: 667 } } },
+    { name: 'phone-small', testIgnore: /coach-chat/, use: { viewport: { width: 375, height: 667 } } },
+    // Chat runs against a build pointed at a mocked Supabase (npm run export:web:cloud); see e2e/coach-chat.spec.ts.
+    { name: 'cloud-mocked', testMatch: /coach-chat/, use: { viewport: { width: 390, height: 844 }, baseURL: 'http://127.0.0.1:8082' } },
   ],
-  webServer: { command: 'node scripts/serve-web.js 8081', url: 'http://127.0.0.1:8081', reuseExistingServer: true, timeout: 30_000 },
+  webServer: [
+    { command: 'node scripts/serve-web.js 8081 dist', url: 'http://127.0.0.1:8081', reuseExistingServer: true, timeout: 30_000 },
+    { command: 'node scripts/serve-web.js 8082 dist-cloud', url: 'http://127.0.0.1:8082', reuseExistingServer: true, timeout: 30_000 },
+  ],
 });

@@ -34,7 +34,7 @@ jobs:
           psql "$PG_TEST_URL" -v ON_ERROR_STOP=1 -q -f supabase/tests/local_auth_stub.sql $(for f in supabase/migrations/*.sql; do printf -- "-f %s " "$f"; done)
           npx jest --runInBand --testPathPatterns '\.pg\.test\.ts$'
       - name: Web build
-        run: npm run export:web
+        run: npm run export:web && npm run export:web:cloud
       - name: End-to-end smoke tests (web)
         run: |
           npx playwright install --with-deps chromium

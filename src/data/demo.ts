@@ -20,6 +20,7 @@ export async function seedDemo(env: { store: Store; training: Training; nutritio
     targets: { kcal: null, proteinG: 110, carbsG: null, fatG: null, waterMl: 2500, sleepMin: 420 },
     checkinWeekday: 0,
   });
+  // Loads rise once, then hold for the recent sessions, so the coach has a "ready to progress" suggestion to show.
   const start = addDays(weekStartOf(today, 1), -21);
   const pid = await training.createFromTemplate('tpl_home3');
   await training.activateProgram(pid, [1, 3, 5], start);
@@ -36,7 +37,7 @@ export async function seedDemo(env: { store: Store; training: Training; nutritio
     let k = 0;
     for (const x of d?.exercises ?? []) {
       for (const set of x.sets) {
-        if (x.input_type === 'weight_reps') await training.updateSet(set.id, { load_kg: 8 + 2 * Math.floor(n / 3) + (x.position % 3) * 2, reps: x.rep_max ?? 10, rir: 2 });
+        if (x.input_type === 'weight_reps') await training.updateSet(set.id, { load_kg: 8 + 2 * Math.min(Math.floor(n / 3), 1) + (x.position % 3) * 2, reps: x.rep_max ?? 10, rir: 2 });
         else if (x.input_type === 'bodyweight_reps') await training.updateSet(set.id, { reps: 8 + Math.floor(n / 2) });
         await training.completeSet(set.id, t0 + (++k) * 150_000);
       }

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // Serves the exported web build (dist/) with the cross-origin isolation headers that
-// expo-sqlite needs on web, and an SPA fallback. Used by the e2e suite. Usage: node scripts/serve-web.js [port]
+// expo-sqlite needs on web, and an SPA fallback. Used by the e2e suite. Usage: node scripts/serve-web.js [port] [dir]
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const root = path.resolve(__dirname, '..', 'dist');
 const port = Number(process.argv[2] ?? process.env.PORT ?? 8081);
+const root = path.resolve(__dirname, '..', process.argv[3] ?? 'dist');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.wasm': 'application/wasm', '.png': 'image/png', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.svg': 'image/svg+xml' };
 
 http.createServer((req, res) => {
@@ -24,4 +24,4 @@ http.createServer((req, res) => {
     'Cache-Control': 'no-store',
   });
   fs.createReadStream(file).pipe(res);
-}).listen(port, '127.0.0.1', () => console.log(`serving dist on http://127.0.0.1:${port}`));
+}).listen(port, '127.0.0.1', () => console.log(`serving ${root} on http://127.0.0.1:${port}`));

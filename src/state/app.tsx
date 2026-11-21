@@ -7,8 +7,9 @@ import { AppState } from 'react-native';
 import { seedDemo } from '@/data/demo';
 import type { Db } from '@/data/db';
 import { deleteExpoDb, openExpoDb } from '@/data/db.expo';
+import { Coach, type CoachCtx } from '@/data/coach';
 import { Nutrition } from '@/data/nutrition';
-import { DEFAULT_PREFS, loadPrefs, localeDefaults, savePrefs, type Prefs } from '@/data/prefs';
+import { DEFAULT_PREFS, loadPrefs, localeDefaults, savePrefs, seedPrefsLocal, type Prefs } from '@/data/prefs';
 import { Recovery } from '@/data/recovery';
 import { migrate } from '@/data/schema';
 import { setIdGenerator, Store } from '@/data/store';
@@ -16,12 +17,14 @@ import { Training } from '@/data/training';
 import { deviceTimeZone, localDateOf, type LocalDate } from '@/domain/time';
 import { setLocale } from '@/i18n';
 import { attachGuestData, wipeData } from '@/sync/attach';
-import { cloudEnabled, supabase, supabaseTransport } from '@/sync/cloud';
+import { coachTransport, cloudEnabled, supabase, supabaseTransport } from '@/sync/cloud';
+import type { CoachTransport } from '@/coach/transport';
 import { SyncEngine, type SyncReport, type SyncStatus } from '@/sync/engine';
 
 setIdGenerator(() => Crypto.randomUUID());
 
 const PARTITION_KEY = 'kinset.partition';
+const isDemo = (p: string) => p === 'demo';
 const dbName = (p: string) => `kinset-${p}.db`;
 const acct = (uid: string) => `acct-${uid}`;
 
@@ -32,6 +35,7 @@ interface Env {
   training: Training;
   nutrition: Nutrition;
   recovery: Recovery;
+  coach: Coach;
   engine: SyncEngine | null;
 }
 
@@ -58,6 +62,10 @@ export interface AppCtx extends Env {
     deleteAccount: (password: string) => Promise<string | null>;
   };
   sync: { status: SyncStatus | null; lastReport: SyncReport | null; run: () => Promise<SyncReport | null> };
+  /** Time context for coach tools and proposals. */
+  coachCtx: () => CoachCtx;
+  /** Present only when a backend is configured and the user is signed in (keys stay on the server). */
+  coachTransport: CoachTransport | null;
 }
 
 const Ctx = createContext<AppCtx | null>(null);
@@ -71,12 +79,27 @@ async function openEnv(partition: string): Promise<Env> {
   const db = await openExpoDb(dbName(partition));
   const from = await migrate(db);
   const store = new Store(db, partition.startsWith('acct-'));
+  const training = new Training(store);
+  const nutrition = new Nutrition(store);
+  const recovery = new Recovery(store);
+  if (from === 0 && partition.startsWith('acct-')) {
+    // First sign-in on this device: start from this device's guest settings instead of onboarding again.
+    try {
+      const g = await openExpoDb(dbName('guest'));
+      await migrate(g);
+      const guestPrefs = await loadPrefs(new Store(g, false));
+      await g.close();
+      if (guestPrefs.onboarded) await seedPrefsLocal(store, guestPrefs);
+    } catch {
+      // No guest profile: the account's own settings (or onboarding) apply.
+    }
+  }
   if (from === 0 && partition === 'guest') {
     const loc = Localization.getLocales()[0];
     await savePrefs(store, localeDefaults(loc?.regionCode ?? null, loc?.measurementSystem ? loc.measurementSystem === 'metric' : null));
   }
   return {
-    partition, db, store, training: new Training(store), nutrition: new Nutrition(store), recovery: new Recovery(store),
+    partition, db, store, training, nutrition, recovery, coach: new Coach(store, training, nutrition, recovery),
     engine: store.syncEnabled && cloudEnabled ? new SyncEngine(store, supabaseTransport) : null,
   };
 }
@@ -279,6 +302,8 @@ export function AppProvider({ children, fallback }: { children: React.ReactNode;
         },
       },
       sync: { status: env.engine ? status : null, lastReport, run: runSync },
+      coachCtx: () => ({ today: localDateOf(Date.now(), deviceTimeZone()), tz: deviceTimeZone(), now: Date.now() }),
+      coachTransport: cloudEnabled && user && !isDemo(env.partition) ? coachTransport : null,
     };
   }, [env, prefs, tz, today, user, guestRows, status, lastReport, runSync, switchTo]);
 

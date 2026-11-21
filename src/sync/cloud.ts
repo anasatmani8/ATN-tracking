@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { TransportError, type Transport } from './engine';
+import { httpCoachTransport } from '@/coach/transport';
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -74,3 +75,10 @@ export const supabaseTransport: Transport = {
     }
   },
 };
+
+/** AI coach transport: the user's access token authenticates; provider keys live only in the server function. */
+export const coachTransport = httpCoachTransport({
+  baseUrl: url,
+  anonKey,
+  accessToken: async () => (cloudEnabled ? ((await supabase().auth.getSession()).data.session?.access_token ?? null) : null),
+});

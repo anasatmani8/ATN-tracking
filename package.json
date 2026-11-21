@@ -72,7 +72,8 @@
     "e2e": "playwright test --trace off",
     "check": "npm run typecheck && npm run lint && npm test && npm run test:server",
     "serve:web": "node scripts/serve-web.js 8081",
-    "icons": "node scripts/render-icons.js"
+    "icons": "node scripts/render-icons.js",
+    "export:web:cloud": "EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:8090 EXPO_PUBLIC_SUPABASE_ANON_KEY=test-anon expo export --platform web --output-dir dist-cloud"
   },
   "private": true,
   "engines": {

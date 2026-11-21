@@ -14,6 +14,9 @@ import { useApp, useLive } from '@/state/app';
 import { errorText, useFmt } from '@/state/hooks';
 import { DAY_TABLES, loadDay } from '@/state/today';
 import { radius, spacing, type } from '@/theme';
+import type { CoachAction } from '@/data/coach';
+import { InsightCard } from '@/screens/coach/insight-card';
+import { ProposalCard } from '@/screens/coach/proposal-card';
 import { nowMs } from '@/domain/clock';
 
 function HabitRow({ icon, title, value, status, done, children }: { icon: IconName; title: string; value: string; status: string; done: boolean; children: React.ReactNode }) {
@@ -48,6 +51,9 @@ export default function Today() {
   const [date, setDate] = useState(app.today);
   const [moveOpen, setMoveOpen] = useState(false);
   const { data: day } = useLive((a) => loadDay(a, date), DAY_TABLES, [date]);
+  const { data: insights } = useLive((a) => a.coach.insights(a.coachCtx()), [...DAY_TABLES, 'reminders', 'progression_decisions', 'session_sets']);
+  const topInsight = date === app.today ? (insights?.[0] ?? null) : null;
+  const [proposal, setProposal] = useState<CoachAction | null>(null);
   const { prefs, today } = app;
   const isToday = date === today;
   const appName = (Constants.expoConfig?.name ?? 'Kinset').replace(/ \(.*\)$/, '');
@@ -71,6 +77,11 @@ export default function Today() {
           <View style={{ maxWidth: 640, width: '100%', alignSelf: 'center', gap: spacing.sm }}>
             <Row>
               <Text accessibilityRole="header" style={[type.title, { color: c.onPrimary, flex: 1 }]}>{appName}</Text>
+              <Pressable testID="open-coach" accessibilityRole="button" accessibilityLabel={t('coach.title')} onPress={() => router.push('/coach')}
+                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: spacing.md, borderRadius: radius.full, backgroundColor: c.onPrimary, opacity: pressed ? 0.7 : 1, marginRight: spacing.sm })}>
+                <Icon name="sparkles" size={18} tone="primary" />
+                <Text style={[type.label, { color: c.primary }]}>{t('coach.title')}</Text>
+              </Pressable>
               <Pressable testID="open-settings" accessibilityRole="button" accessibilityLabel={t('settings.entry')} onPress={() => router.push('/settings')}
                 style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: spacing.md, borderRadius: radius.full, borderWidth: 1, borderColor: c.onPrimary, opacity: pressed ? 0.7 : 1 })}>
                 <Icon name="person-circle-outline" size={20} tone="onPrimary" />
@@ -141,6 +152,13 @@ export default function Today() {
                 )}
               </Card>
 
+              {topInsight ? (
+                <View style={{ gap: spacing.xs }}>
+                  <Row><Icon name="sparkles-outline" size={16} tone="primary" /><Txt variant="overline" tone="textMuted" style={{ flex: 1 }}>{t('coach.suggests')}</Txt><Btn size="sm" variant="ghost" title={t('common.seeAll')} onPress={() => router.push('/coach')} testID="today-coach-all" /></Row>
+                  <InsightCard insight={topInsight} compact testID="today-insight" onProposed={setProposal} />
+                </View>
+              ) : null}
+
               {day.checkinDue ? (
                 <Card testID="checkin-card" onPress={() => router.push('/progress/review')} accessibilityLabel={t('today.checkin.a11y', { status: day.checkin ? t('today.checkin.done') : t('today.checkin.open') })}>
                   <Row gap={spacing.md}>
@@ -192,6 +210,10 @@ export default function Today() {
           )}
         </View>
       </ScrollView>
+
+      <Sheet visible={!!proposal} onClose={() => setProposal(null)} title={t('coach.reviewChange')} testID="today-proposal-sheet">
+        {proposal ? <ProposalCard action={proposal} testID="today-proposal" onDecided={() => setProposal(null)} /> : null}
+      </Sheet>
 
       <Sheet visible={moveOpen} onClose={() => setMoveOpen(false)} title={t('today.move.title')} testID="move-sheet">
         <Txt tone="textMuted">{t('today.move.body')}</Txt>

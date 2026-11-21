@@ -328,7 +328,10 @@ export class Coach {
       const names = new Map((await this.training.listExercises()).map((e) => [e.id, e.name]));
       for (const x of active.doc.days.flatMap((d) => d.exercises)) {
         const r = await this.training.progression(x.exerciseId, x.slotId, { enabled: true, incrementKg: p.incrementKg, minRir: p.minRir });
-        if (r.suggestion.action === 'increase' && r.decision == null && r.suggestion.currentLoadKg != null && r.suggestion.suggestedLoadKg != null) {
+        // A load the user already chose (here or in the logger) after the latest session settles it.
+        const latest = r.suggestion.supporting[0]?.startedAt ?? 0;
+        const chosen = await this.db.first<{ n: number }>(`SELECT COUNT(*) AS n FROM progression_decisions WHERE exercise_id = ? AND deleted_at IS NULL AND decided_at > ?`, [x.exerciseId, latest]);
+        if (r.suggestion.action === 'increase' && r.decision == null && !chosen?.n && r.suggestion.currentLoadKg != null && r.suggestion.suggestedLoadKg != null) {
           progression.push({ exerciseId: x.exerciseId, name: names.get(x.exerciseId) ?? x.exerciseId, currentKg: r.suggestion.currentLoadKg, suggestedKg: r.suggestion.suggestedLoadKg, sessions: r.suggestion.supporting.length });
         }
       }
@@ -462,8 +465,11 @@ export class Coach {
         const last = await this.training.previousSets(ex.id);
         const lastLoad = last?.sets.reduce<number | null>((m, s) => (s.load_kg != null && (m == null || s.load_kg > m) ? s.load_kg : m), null) ?? null;
         const load = a.load_kg as number;
-        if (lastLoad != null && load > lastLoad * (1 + GUARDRAILS.maxLoadIncreasePct / 100) + 1e-9) {
-          return fail(`That is more than +${GUARDRAILS.maxLoadIncreasePct}% over the last working load (${lastLoad} kg). Suggest a smaller step.`);
+        // Light loads can't move by 10%: one smallest step (e.g. the next dumbbell) is always allowed.
+        const step = (await loadPrefs(this.store)).incrementKg;
+        const maxLoad = lastLoad == null ? null : lastLoad + Math.max(lastLoad * (GUARDRAILS.maxLoadIncreasePct / 100), step);
+        if (maxLoad != null && load > maxLoad + 1e-9) {
+          return fail(`That is more than +${GUARDRAILS.maxLoadIncreasePct}% or one ${step} kg step over the last working load (${lastLoad} kg). Suggest a smaller step.`);
         }
         return ok({ ...p, subject: ex.name, undoable: true, changes: [{ field: 'next_load', from: lastLoad, to: load, unit: 'kg' }] });
       }

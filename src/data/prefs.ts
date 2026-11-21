@@ -76,3 +76,13 @@ export async function savePrefs(store: Store, patch: Partial<Prefs>): Promise<vo
     for (const [k, v] of Object.entries(patch)) await store.put('prefs', { id: k, value: JSON.stringify(v) });
   });
 }
+
+/**
+ * Device-local preference write (not queued for sync). Used to seed a new account's local
+ * database from this device's guest profile; settings already saved in the account sync down and win.
+ */
+export async function seedPrefsLocal(store: Store, prefs: Partial<Prefs>): Promise<void> {
+  await store.tx(async () => {
+    for (const [k, v] of Object.entries(prefs)) await store.put('prefs', { id: k, value: JSON.stringify(v) }, { sync: false });
+  });
+}

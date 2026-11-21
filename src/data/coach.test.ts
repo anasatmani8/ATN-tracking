@@ -122,8 +122,9 @@ describe('coach on-device tools', () => {
     expect(await bad('propose_log_water', { amount_ml: 250, date: '2026-11-25', reason: 'xxx' })).toBe('date must be today or earlier.');
     // +10% limit over the last working load.
     await finishSquat(env, prog.id, prog.doc.days[0].id, NOW - 3 * DAY, 20, 12, 3);
-    expect(await bad('propose_set_next_load', { exercise_id: 'db_goblet_squat', load_kg: 25, reason: 'xxx' })).toMatch(/more than \+10%/);
-    expect(await bad('propose_set_next_load', { exercise_id: 'db_goblet_squat', load_kg: 22, reason: 'xxx' })).toBe('ok');
+    expect(await bad('propose_set_next_load', { exercise_id: 'db_goblet_squat', load_kg: 25, reason: 'xxx' })).toMatch(/more than \+10% or one 2.5 kg step/);
+    expect(await bad('propose_set_next_load', { exercise_id: 'db_goblet_squat', load_kg: 22.5, reason: 'xxx' })).toBe('ok'); // one 2.5 kg step (12.5%) is allowed
+    expect(await bad('propose_set_next_load', { exercise_id: 'db_goblet_squat', load_kg: 22.6, reason: 'xxx' })).toMatch(/more than/);
     expect(await bad('propose_set_targets', { water_ml: null, sleep_min: null, kcal: 900, protein_g: null, reason: 'xxx' })).toBe('input.kcal must be at least 1200');
     // A proposal that went stale (workout completed meanwhile) fails on apply instead of acting on old data.
     const p = await env.coach.propose('chat', null, { name: 'propose_skip_workout', input: { scheduled_id: sched[2].id, reason: 'Rest day.' } }, ctx);
@@ -203,4 +204,26 @@ describe('coach on-device tools', () => {
     await env.coach.dismissInsight(missed.id);
     expect((await env.coach.insights(ctx)).some((i) => i.id === missed.id)).toBe(false);
   });
+});
+
+test('every insight action passes the same checks the coach uses (no self-contradicting suggestions)', async () => {
+  const env = await makeEnv();
+  const prog = await withHomePlan(env);
+  // Two plateaued sessions at a light load: the app's rule suggests one 2.5 kg step (+21%).
+  await finishSquat(env, prog.id, prog.doc.days[0].id, NOW - 6 * DAY, 12, 12, 2);
+  await finishSquat(env, prog.id, prog.doc.days[0].id, NOW - 3 * DAY, 12, 12, 2);
+  const ins = await env.coach.insights(ctx);
+  expect(ins.find((i) => i.kind === 'progression_ready')?.action?.args).toMatchObject({ load_kg: 14.5 });
+  for (const i of ins.filter((x) => x.action)) {
+    const r = await env.coach.propose('insight', null, { name: i.action!.tool, input: i.action!.args }, ctx);
+    expect(r.ok ? 'ok' : r.error).toBe('ok');
+  }
+  // Once the user applies it, the suggestion goes away until new sessions arrive; undo brings it back.
+  const prog2 = ins.find((i) => i.kind === 'progression_ready')!;
+  const p = await env.coach.propose('insight', null, { name: prog2.action!.tool, input: prog2.action!.args }, ctx);
+  if (!p.ok) throw new Error(p.error);
+  await env.coach.apply(p.value.id, ctx);
+  expect((await env.coach.insights(ctx)).some((i) => i.kind === 'progression_ready')).toBe(false);
+  await env.coach.undo(p.value.id, ctx);
+  expect((await env.coach.insights(ctx)).some((i) => i.kind === 'progression_ready')).toBe(true);
 });

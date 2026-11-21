@@ -52,7 +52,7 @@ export const GUARDRAILS = {
   reps: { min: 1, max: 50 },
   restSec: { min: 15, max: 600 },
   durationSec: { min: 5, max: 3600 },
-  /** Largest single load increase relative to the last working load. Checked on the device. */
+  /** Largest single load increase: 10% of the last working load, or one smallest load step if that is larger. Checked on the device. */
   maxLoadIncreasePct: 10,
   waterTargetMl: { min: 1000, max: 5000 },
   waterEntryMl: { min: 50, max: 2000 },
@@ -131,7 +131,7 @@ export const TOOLS: ToolSpec[] = [
     scheduled_id: id('scheduled workout'), new_date: str('New date, YYYY-MM-DD, today or later.', { pattern: DATE }), reason,
   }),
   tool('propose_skip_workout', 'propose', `Mark a scheduled workout as skipped (for rest or recovery). ${PROPOSE_NOTE}`, { scheduled_id: id('scheduled workout'), reason }),
-  tool('propose_set_next_load', 'propose', `Set the load the app prefills next time for an exercise. At most +${GUARDRAILS.maxLoadIncreasePct}% over the last working load; only after the user has met their rep target with reps in reserve. Load in kilograms (canonical). ${PROPOSE_NOTE}`, {
+  tool('propose_set_next_load', 'propose', `Set the load the app prefills next time for an exercise. At most +${GUARDRAILS.maxLoadIncreasePct}% over the last working load, or one smallest load step (get_profile) if that is larger; only after the user has met their rep target with reps in reserve. Load in kilograms (canonical). ${PROPOSE_NOTE}`, {
     exercise_id: id('exercise'), load_kg: num('Load in kg as entered in the app (per dumbbell for dumbbell pairs).', 0.5, 500), reason,
   }),
   tool('propose_set_targets', 'propose', `Set optional daily targets. Water ${GUARDRAILS.waterTargetMl.min}-${GUARDRAILS.waterTargetMl.max} mL, sleep ${GUARDRAILS.sleepTargetMin.min / 60}-${GUARDRAILS.sleepTargetMin.max / 60} h, energy ${GUARDRAILS.kcalTarget.min}-${GUARDRAILS.kcalTarget.max} kcal (never below ${GUARDRAILS.kcalTarget.min}; suggest a registered dietitian instead), protein ${GUARDRAILS.proteinTargetG.min}-${GUARDRAILS.proteinTargetG.max} g. ${PROPOSE_NOTE}`, {

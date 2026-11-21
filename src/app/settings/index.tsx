@@ -7,7 +7,7 @@ import { useFeedback } from '@/components/feedback';
 import { Card, Chip, Divider, Field, ListItem, Row, Screen, SectionTitle, Segmented, Toggle, Txt } from '@/components/ui';
 import type { Prefs } from '@/data/prefs';
 import { fromKg, fromMl, parseDecimal, round, toKg, toMl } from '@/domain/units';
-import { t, weekdayName } from '@/i18n';
+import { t, weekdayName, type StringKey } from '@/i18n';
 import { useApp } from '@/state/app';
 import { useFmt } from '@/state/hooks';
 import { spacing } from '@/theme';
@@ -103,6 +103,21 @@ export default function Settings() {
           <Chip label={t('common.off')} selected={prefs.checkinWeekday == null} onPress={() => set({ checkinWeekday: null })} />
           {[1, 2, 3, 4, 5, 6, 0].map((d) => <Chip key={d} label={weekdayName(d)} selected={prefs.checkinWeekday === d} onPress={() => set({ checkinWeekday: d })} />)}
         </Row>
+      </Card>
+
+      <SectionTitle>{t('coach.title')}</SectionTitle>
+      <Card style={{ paddingVertical: spacing.sm }}>
+        <ListItem testID="settings-coach" icon="sparkles-outline" title={t('coach.open')} subtitle={prefs.coachConsent ? t('coach.consentGiven', { provider: t(`coach.provider.${prefs.coachConsent.provider}` as StringKey) }) : t('coach.consentNone')} onPress={() => router.push('/coach')} />
+        {prefs.coachConsent ? (
+          <>
+            <Divider />
+            <ListItem testID="settings-coach-withdraw" icon="hand-left-outline" title={t('coach.withdraw')} subtitle={t('coach.withdrawSub')} onPress={async () => {
+              if (!(await confirm({ title: t('coach.withdraw'), message: t('coach.withdrawBody'), destructive: true, confirmLabel: t('coach.withdrawConfirm') }))) return;
+              await app.coach.deleteHistory();
+              await setPrefs({ coachConsent: null });
+            }} />
+          </>
+        ) : null}
       </Card>
 
       <SectionTitle>{t('settings.appearance')}</SectionTitle>

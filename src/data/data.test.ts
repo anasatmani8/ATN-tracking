@@ -11,7 +11,7 @@ import { LOCAL_USER_TABLES, MIGRATIONS, migrate, SYNCED_TABLES } from './schema'
 import { Store } from './store';
 import { Training } from './training';
 import { buildExport, exportCsvFiles, toCsv } from './export';
-import { DEFAULT_PREFS, loadPrefs, savePrefs } from './prefs';
+import { DEFAULT_PREFS, loadPrefs, savePrefs, seedPrefsLocal } from './prefs';
 import { makeEnv } from './testkit';
 import type { NutrientSnapshot } from '@/domain/nutrition';
 
@@ -349,6 +349,13 @@ describe('recovery', () => {
 });
 
 describe('prefs, export, migrations', () => {
+  test('seeded prefs stay local: a new account database starts from guest settings without sync traffic', async () => {
+    const env = await makeEnv({ sync: true });
+    await seedPrefsLocal(env.store, { ...DEFAULT_PREFS, onboarded: true, weightUnit: 'lb' });
+    expect(await loadPrefs(env.store)).toMatchObject({ onboarded: true, weightUnit: 'lb' });
+    expect(await env.db.all(`SELECT * FROM outbox`)).toEqual([]);
+  });
+
   test('prefs merge with defaults', async () => {
     const env = await makeEnv();
     expect(await loadPrefs(env.store)).toEqual(DEFAULT_PREFS);
