@@ -78,7 +78,20 @@ export const MIGRATIONS: string[] = [
     load_kg REAL, decided_at INTEGER NOT NULL, ${C});
   CREATE INDEX idx_prog_dec ON progression_decisions(exercise_id, decided_at);
   `,
+  // v3 — AI coach. Device-local only (never synced): chat history and the proposal/undo log.
+  `
+  CREATE TABLE coach_threads (id TEXT PRIMARY KEY, provider TEXT NOT NULL, title TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+  CREATE TABLE coach_messages (id TEXT PRIMARY KEY, thread_id TEXT NOT NULL, seq INTEGER NOT NULL, role TEXT NOT NULL, display_text TEXT NOT NULL DEFAULT '',
+    native TEXT, safety TEXT, created_at INTEGER NOT NULL);
+  CREATE INDEX idx_coach_msg ON coach_messages(thread_id, seq);
+  CREATE TABLE coach_actions (id TEXT PRIMARY KEY, thread_id TEXT, source TEXT NOT NULL, tool TEXT NOT NULL, args TEXT NOT NULL, preview TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'proposed', result TEXT, undo TEXT, error TEXT, created_at INTEGER NOT NULL, decided_at INTEGER);
+  CREATE INDEX idx_coach_actions ON coach_actions(status, created_at);
+  `,
 ];
+
+/** Device-local tables that hold user content: included in export and erase, never synced. */
+export const LOCAL_USER_TABLES = ['coach_threads', 'coach_messages', 'coach_actions'] as const;
 
 export const SCHEMA_VERSION = MIGRATIONS.length;
 

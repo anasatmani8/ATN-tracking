@@ -7,7 +7,7 @@ import { fromKg } from '@/domain/units';
 import { zonedToInstant } from '@/domain/time';
 import { sleepDuration } from '@/domain/recovery';
 import { openNodeDb } from './db.node';
-import { MIGRATIONS, migrate, SYNCED_TABLES } from './schema';
+import { LOCAL_USER_TABLES, MIGRATIONS, migrate, SYNCED_TABLES } from './schema';
 import { Store } from './store';
 import { Training } from './training';
 import { buildExport, exportCsvFiles, toCsv } from './export';
@@ -371,7 +371,7 @@ describe('prefs, export, migrations', () => {
     await env.training.completeSet(d.exercises[0].sets[0].id, T0 + MIN);
     await env.training.finishSession(sid, T0 + 5 * MIN);
     const b = await buildExport(env.db, T0);
-    expect(Object.keys(b.tables).sort()).toEqual([...SYNCED_TABLES].sort());
+    expect(Object.keys(b.tables).sort()).toEqual([...SYNCED_TABLES, ...LOCAL_USER_TABLES].sort());
     expect(b.tables.water_logs).toHaveLength(1);
     expect(b.tables.measurements[0]).toMatchObject({ value: 80.5 });
     expect(b.tables.session_sets).toHaveLength(1);

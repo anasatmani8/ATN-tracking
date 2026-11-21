@@ -1,5 +1,5 @@
 import type { Db } from '@/data/db';
-import { SYNCED_TABLES } from '@/data/schema';
+import { LOCAL_USER_TABLES, SYNCED_TABLES } from '@/data/schema';
 import type { Row, Store } from '@/data/store';
 
 /**
@@ -40,6 +40,6 @@ export async function attachGuestData(guest: Db, account: Store): Promise<{ copi
 /** Remove all user data from a partition (local erase, or after a successful guest attach). */
 export async function wipeData(db: Db): Promise<void> {
   await db.tx(async () => {
-    for (const t of [...SYNCED_TABLES, 'outbox', 'conflicts', 'sync_meta']) await db.run(`DELETE FROM ${t}`);
+    for (const t of [...SYNCED_TABLES, ...LOCAL_USER_TABLES, 'outbox', 'conflicts', 'sync_meta']) await db.run(`DELETE FROM ${t}`);
   });
 }

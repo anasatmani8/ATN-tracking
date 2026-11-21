@@ -1,5 +1,5 @@
 import type { Db } from './db';
-import { SCHEMA_VERSION, SYNCED_TABLES } from './schema';
+import { LOCAL_USER_TABLES, SCHEMA_VERSION, SYNCED_TABLES } from './schema';
 
 export const EXPORT_FORMAT_VERSION = 1;
 
@@ -22,6 +22,9 @@ export async function buildExport(db: Db, now: number): Promise<ExportBundle> {
   for (const t of SYNCED_TABLES) {
     const rows = await db.all<Record<string, unknown>>(`SELECT * FROM ${t} WHERE deleted_at IS NULL ORDER BY created_at, id`);
     tables[t] = rows.map(({ rev: _rev, deleted_at: _d, ...rest }) => rest);
+  }
+  for (const t of LOCAL_USER_TABLES) {
+    tables[t] = await db.all<Record<string, unknown>>(`SELECT * FROM ${t} ORDER BY created_at, id`);
   }
   return {
     format: 'kinset-export', formatVersion: EXPORT_FORMAT_VERSION, schemaVersion: SCHEMA_VERSION, exportedAt: new Date(now).toISOString(),

@@ -31,6 +31,10 @@ export interface Prefs {
   favoriteFoods: string[];
   sleepAvgIncludesNaps: boolean;
   restTimerAlerts: boolean;
+  /** When the user agreed to send coach chats to the named AI provider; null = not yet. */
+  coachConsent: { at: number; provider: string } | null;
+  /** Coach insight ids the user dismissed. */
+  coachDismissed: string[];
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -41,7 +45,7 @@ export const DEFAULT_PREFS: Prefs = {
   targets: { kcal: null, proteinG: null, carbsG: null, fatG: null, waterMl: null, sleepMin: null },
   waterPresetsMl: [250, 500], mealSlots: ['Breakfast', 'Lunch', 'Dinner', 'Snacks'], theme: 'system',
   progressionEnabled: true, minRir: 2, checkinWeekday: null, quietStart: '22:00', quietEnd: '07:00',
-  favoriteFoods: [], sleepAvgIncludesNaps: false, restTimerAlerts: false,
+  favoriteFoods: [], sleepAvgIncludesNaps: false, restTimerAlerts: false, coachConsent: null, coachDismissed: [],
 };
 
 /** Locale-derived defaults for a new install (US → imperial, Sunday week start). */
